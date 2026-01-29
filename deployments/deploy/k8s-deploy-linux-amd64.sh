@@ -33,7 +33,8 @@ services=("openim-admin-api" "openim-admin-rpc" "openim-chat-api" "openim-chat-r
 
 for service in "${services[@]}"; do
   IMAGE_TAG="${HARBOR_URL}/${HARBOR_PROJECT}/${service}:${VERSION}"
-  docker buildx build --platform linux/amd64 -t $IMAGE_TAG build/images/$service/ --push
+  docker build -t $IMAGE_TAG -f build/images/$service/Dockerfile .
+  docker push $IMAGE_TAG
 done
 
 # Update deployment YAMLs to use Harbor images
