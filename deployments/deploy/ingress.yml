@@ -1,0 +1,46 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+  name: admin-api-ingress
+  namespace: openim
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: admin-chat-openim.36x9.com
+      http:
+        paths:
+          - backend:
+              service:
+                name: admin-api-service
+                port:
+                  number: 10009
+            path: /admin-api
+            pathType: Prefix
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+  name: chat-api-ingress
+  namespace: openim
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: api-chat-openim.36x9.com
+      http:
+        paths:
+          - backend:
+              service:
+                name: chat-api-service
+                port:
+                  number: 10008
+            path: /chat-api
+            pathType: Prefix

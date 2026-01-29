@@ -1,0 +1,8 @@
+export APP_NAME="chat-openim"
+export NAMESPACE="openim"
+export DOMAIN="chat-openim.36x9.com"
+export HARBOR_PROJECT="app"
+export HARBOR_URL="10.88.88.13:81"
+export HARBOR_USER="admin"
+export HARBOR_PASS="root123"
+export IMAGE_NAME="${HARBOR_URL}/${HARBOR_PROJECT}/${APP_NAME}"
