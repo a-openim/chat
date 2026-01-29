@@ -25,7 +25,9 @@ echo "$HARBOR_PASS" | docker login $HARBOR_URL -u $HARBOR_USER --password-stdin
 # Build Docker images for linux/amd64 and push to Harbor
 echo "Building and pushing Docker images for linux/amd64..."
 
-docker buildx create --use --name openim-builder || true
+# Remove existing builder if it exists to avoid conflicts
+docker buildx rm openim-builder || true
+docker buildx create --use --name openim-builder
 
 services=("openim-admin-api" "openim-admin-rpc" "openim-chat-api" "openim-chat-rpc")
 
