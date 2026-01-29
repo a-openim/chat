@@ -28,4 +28,6 @@ fi
 
 echo "Mage installed successfully."
 
-go mod download
+go mod download -x
+
+say -v Meijia "congratulations"
