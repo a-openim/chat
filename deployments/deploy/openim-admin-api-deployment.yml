@@ -14,7 +14,8 @@ spec:
     spec:
       containers:
         - name: openim-admin-api-container
-          image: 10.88.88.13:81/app/openim-admin-api:v3.8.3
+          image: 10.88.88.13:81/app/openim-admin-api:v260130203716
+          imagePullPolicy: Always
           env:
             - name: CONFIG_PATH
               value: "/config"

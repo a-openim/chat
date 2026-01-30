@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: openim-admin-rpc-container
-          image: openim/openim-admin-rpc:v3.8.3
+          image: 10.88.88.13:81/app/openim-admin-rpc:v260130203716
           env:
             - name: CONFIG_PATH
               value: "/config"

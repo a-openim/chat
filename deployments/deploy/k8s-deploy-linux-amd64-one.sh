@@ -68,10 +68,11 @@ done
 echo "Updating deployment YAML to use Harbor image..."
 echo "Current directory: $(pwd)"
 echo "Checking for deployment file..."
+
 for service in "${services[@]}"; do
   DEPLOYMENT_FILE="deployments/deploy/${service}-deployment.yml"
   IMAGE_TAG="${HARBOR_URL}/${HARBOR_PROJECT}/${service}:${VERSION}"
-  sed -i.bak "s|image: openim/${service}:.*|image: ${IMAGE_TAG}|g" $DEPLOYMENT_FILE
+  sed -i.bak "s|image: .*/${service}:.*|image: ${IMAGE_TAG}|g" $DEPLOYMENT_FILE
 done
 
 # Deploy to Kubernetes
