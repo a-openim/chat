@@ -5,7 +5,7 @@
 
 # Ignore build artifacts
 logs/
-_output/
+# _output/
 
 # Ignore non-essential documentation
 README.md

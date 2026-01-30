@@ -15,7 +15,7 @@ COPY . .
 
 RUN echo "Starting go mod tidy at $(date)" && go mod tidy -v && echo "Finished go mod tidy at $(date)"
 
-RUN go build -o _output/admin-api ./cmd/api/admin-api
+RUN if [ ! -f _output/admin-api ]; then go build -o _output/admin-api ./cmd/api/admin-api; fi
 
 # Using Alpine Linux for the final image
 FROM alpine:latest

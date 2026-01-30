@@ -6,6 +6,10 @@
 set -e
 
 # Source the deployment config
+if [ ! -f deploy.confg ]; then
+  echo "Configuration file 'deploy.confg' not found. Exiting."
+  exit 1
+fi
 source deploy.confg
 
 NAMESPACE=$NAMESPACE
@@ -13,10 +17,14 @@ VERSION=v$(date +%y%m%d%H%M%S)
 echo $VERSION > .version
 
 # Note: Binaries are built inside the Docker container, so no pre-build needed
+GOOS=linux CGO_ENABLE=0 PLATFORMS=linux_amd64 mage build
 
 # Login to private Harbor
 echo "Logging in to Harbor..."
-echo "$HARBOR_PASS" | docker login $HARBOR_URL -u $HARBOR_USER --password-stdin
+if ! echo "$HARBOR_PASS" | docker login $HARBOR_URL -u $HARBOR_USER --password-stdin; then
+  echo "Failed to login to Harbor. Exiting."
+  exit 1
+fi
 
 # Build Docker images for linux/amd64 and push to Harbor
 echo "Building and pushing Docker image for selected service..."

@@ -24,16 +24,11 @@ var (
 	customConfigDir = "config"  // configuration directory, default is "config"
 	customToolsDir  = "tools"   // tools source code directory, default is "tools"
 )
-
+//  GOOS=linux CGO_ENABLE=0 PLATFORMS=linux_amd64 mage build
 // Build support specifical binary build.
 //
 // Example: `mage build chat-api chat-rpc check-component`
 func Build() {
-
-	// 强制设置交叉编译环境变量，覆盖 mageutil 的内部逻辑
-	os.Setenv("GOOS", "linux")
-	os.Setenv("GOARCH", "amd64")
-	os.Setenv("CGO_ENABLED", "0")
 
 	flag.Parse()
 	bin := flag.Args()

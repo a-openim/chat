@@ -15,7 +15,7 @@ COPY . .
 
 RUN go mod tidy
 
-RUN go build -o _output/chat-api ./cmd/api/chat-api
+RUN if [ ! -f _output/chat-api ]; then go build -o _output/chat-api ./cmd/api/chat-api; fi
 
 # Using Alpine Linux for the final image
 FROM alpine:latest
