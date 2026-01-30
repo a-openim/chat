@@ -9,7 +9,8 @@ set -e
 source deploy.confg
 
 NAMESPACE=$NAMESPACE
-VERSION=v3.8.3
+VERSION=v$(date +%y%m%d%H%M%S)
+echo $VERSION > .version
 
 # Note: Binaries are built inside the Docker container, so no pre-build needed
 
@@ -71,6 +72,12 @@ echo "Starting OpenIM Server Deployment in namespace: $NAMESPACE"
 # Apply ConfigMap
 echo "Applying ConfigMap..."
 kubectl apply -f deployments/deploy/chat-config.yml -n $NAMESPACE
+
+# Apply secrets first
+echo "Applying secrets..."
+kubectl apply -f deployments/deploy/mongo-secret.yml -n $NAMESPACE
+kubectl apply -f deployments/deploy/redis-secret.yml -n $NAMESPACE
+
 
 # Apply services
 echo "Applying service..."

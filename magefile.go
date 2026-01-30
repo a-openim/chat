@@ -29,6 +29,12 @@ var (
 //
 // Example: `mage build chat-api chat-rpc check-component`
 func Build() {
+
+	// 强制设置交叉编译环境变量，覆盖 mageutil 的内部逻辑
+	os.Setenv("GOOS", "linux")
+	os.Setenv("GOARCH", "amd64")
+	os.Setenv("CGO_ENABLED", "0")
+
 	flag.Parse()
 	bin := flag.Args()
 	if len(bin) != 0 {

@@ -13,7 +13,7 @@ WORKDIR $CHAT_DIR
 # Copy all files from the current directory into the container
 COPY . .
 
-RUN go mod tidy
+RUN echo "Starting go mod tidy at $(date)" && go mod tidy -v && echo "Finished go mod tidy at $(date)"
 
 RUN go build -o _output/admin-api ./cmd/api/admin-api
 

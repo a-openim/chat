@@ -9,7 +9,8 @@ set -e
 source deploy.confg
 
 NAMESPACE=$NAMESPACE
-VERSION=v3.8.3
+VERSION=v$(date +%y%m%d%H%M%S)
+echo $VERSION > .version
 
 # Note: Binaries are built inside the Docker container, so no pre-build needed
 
@@ -42,7 +43,7 @@ echo "Checking for deployment files..."
 for service in "${services[@]}"; do
   DEPLOYMENT_FILE="deployments/deploy/${service}-deployment.yml"
   IMAGE_TAG="${HARBOR_URL}/${HARBOR_PROJECT}/${service}:${VERSION}"
-  sed -i.bak "s|image: openim/${service}:.*|image: ${IMAGE_TAG}|g" $DEPLOYMENT_FILE
+  sed -i.bak "s|image: .*/${service}:.*|image: ${IMAGE_TAG}|g" $DEPLOYMENT_FILE
 done
 
 # Deploy to Kubernetes
@@ -51,6 +52,11 @@ echo "Starting OpenIM Server Deployment in namespace: $NAMESPACE"
 # Apply ConfigMap
 echo "Applying ConfigMap..."
 kubectl apply -f chat-config.yml -n $NAMESPACE
+
+# Apply secrets first
+echo "Applying secrets..."
+kubectl apply -f mongo-secret.yml -n $NAMESPACE
+kubectl apply -f redis-secret.yml -n $NAMESPACE
 
 # Apply services
 echo "Applying services..."
