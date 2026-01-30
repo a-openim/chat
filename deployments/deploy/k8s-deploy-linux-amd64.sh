@@ -51,30 +51,30 @@ echo "Starting OpenIM Server Deployment in namespace: $NAMESPACE"
 
 # Apply ConfigMap
 echo "Applying ConfigMap..."
-kubectl apply -f chat-config.yml -n $NAMESPACE
+kubectl apply -f deployments/deploy/chat-config.yml -n $NAMESPACE
 
 # Apply secrets first
 echo "Applying secrets..."
-kubectl apply -f mongo-secret.yml -n $NAMESPACE
-kubectl apply -f redis-secret.yml -n $NAMESPACE
+kubectl apply -f deployments/deploy/mongo-secret.yml -n $NAMESPACE
+kubectl apply -f deployments/deploy/redis-secret.yml -n $NAMESPACE
 
 # Apply services
 echo "Applying services..."
-kubectl apply -f openim-admin-api-service.yml -n $NAMESPACE
-kubectl apply -f openim-admin-rpc-service.yml -n $NAMESPACE
-kubectl apply -f openim-chat-api-service.yml -n $NAMESPACE
-kubectl apply -f openim-chat-rpc-service.yml -n $NAMESPACE
+kubectl apply -f deployments/deploy/openim-admin-api-service.yml -n $NAMESPACE
+kubectl apply -f deployments/deploy/openim-admin-rpc-service.yml -n $NAMESPACE
+kubectl apply -f deployments/deploy/openim-chat-api-service.yml -n $NAMESPACE
+kubectl apply -f deployments/deploy/openim-chat-rpc-service.yml -n $NAMESPACE
 
 # Apply Deployments
 echo "Applying Deployments..."
-kubectl apply -f openim-admin-api-deployment.yml -n $NAMESPACE
-kubectl apply -f openim-admin-rpc-deployment.yml -n $NAMESPACE
-kubectl apply -f openim-chat-api-deployment.yml -n $NAMESPACE
-kubectl apply -f openim-chat-rpc-deployment.yml -n $NAMESPACE
+kubectl apply -f deployments/deploy/openim-admin-api-deployment.yml -n $NAMESPACE
+kubectl apply -f deployments/deploy/openim-admin-rpc-deployment.yml -n $NAMESPACE
+kubectl apply -f deployments/deploy/openim-chat-api-deployment.yml -n $NAMESPACE
+kubectl apply -f deployments/deploy/openim-chat-rpc-deployment.yml -n $NAMESPACE
 
 # Apply Ingress
 echo "Applying Ingress..."
-kubectl apply -f ingress.yml -n $NAMESPACE
+kubectl apply -f deployments/deploy/ingress.yml -n $NAMESPACE
 
 echo "OpenIM Server Deployment completed successfully!"
 echo "You can check the status with: kubectl get pods -n $NAMESPACE"
