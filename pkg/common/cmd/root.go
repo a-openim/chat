@@ -42,6 +42,7 @@ type RootCmd struct {
 	index          int
 	configPath     string
 	etcdClient     *clientv3.Client
+	etcdAddress    string
 }
 
 func (r *RootCmd) Index() int {
@@ -101,6 +102,8 @@ func (r *RootCmd) initEtcd() error {
 	if disConfig.Enable == kdisc.ETCDCONST {
 		discov, _ := kdisc.NewDiscoveryRegister(&disConfig, env, nil)
 		r.etcdClient = discov.(*etcd.SvcDiscoveryRegistryImpl).GetClient()
+	} else {
+		log.ZInfo(context.TODO(), "Etcd not enabled", "enable", disConfig.Enable)
 	}
 	return nil
 }
@@ -119,8 +122,13 @@ func (r *RootCmd) persistentPreRun(cmd *cobra.Command, opts ...func(*CmdOpts)) e
 	if err := r.initializeLogger(cmdOpts); err != nil {
 		return errs.WrapMsg(err, "failed to initialize logger")
 	}
-	if err := r.etcdClient.Close(); err != nil {
-		return errs.WrapMsg(err, "failed to close etcd client")
+	if r.etcdClient != nil {
+		log.ZInfo(context.TODO(), "Closing etcd client", "address", r.etcdAddress)
+		if err := r.etcdClient.Close(); err != nil {
+			return errs.WrapMsg(err, "failed to close etcd client")
+		}
+	} else {
+		log.ZInfo(context.TODO(), "Etcd client is nil, skipping close")
 	}
 
 	return nil

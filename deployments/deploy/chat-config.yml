@@ -6,7 +6,7 @@ data:
   discovery.yml: |
     enable: kubernetes
     kubernetes:
-      namespace: default
+      namespace: openim
     etcd:
       rootDirectory: openim
       address: [ 10.88.88.13:12379 ]

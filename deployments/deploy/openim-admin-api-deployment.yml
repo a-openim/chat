@@ -12,9 +12,10 @@ spec:
       labels:
         app: admin-api-server
     spec:
+      serviceAccountName: openim-service-account
       containers:
         - name: openim-admin-api-container
-          image: 10.88.88.13:81/app/openim-admin-api:v260131094041
+          image: 10.88.88.13:81/app/openim-admin-api:v260131103907
           imagePullPolicy: Always
           env:
             - name: CONFIG_PATH
