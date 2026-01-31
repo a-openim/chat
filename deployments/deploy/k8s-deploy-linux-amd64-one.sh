@@ -17,7 +17,14 @@ VERSION=v$(date +%y%m%d%H%M%S)
 echo $VERSION > .version
 
 # Note: Binaries are built inside the Docker container, so no pre-build needed
-GOOS=linux GOARCH=amd64 PLATFORMS=linux_amd64 CGO_ENABLED=0 mage build
+# Ask user whether to run mage build
+read -p "Do you want to run mage build? (y/n): " run_build
+if [[ "$run_build" =~ ^[Yy]$ ]]; then
+  echo "Running mage build..."
+  GOOS=linux CGO_ENABLE=0 PLATFORMS=linux_amd64 mage build
+else
+  echo "Skipping mage build..."
+fi
 
 # Login to private Harbor
 echo "Logging in to Harbor..."

@@ -15,7 +15,8 @@ spec:
       serviceAccountName: openim-service-account
       containers:
         - name: openim-chat-api-container
-          image: 10.88.88.13:81/app/openim-chat-api:v260131103907
+          image: 10.88.88.13:81/app/openim-chat-api:v260131154910
+          imagePullPolicy: IfNotPresent
           env:
             - name: CONFIG_PATH
               value: "/config"

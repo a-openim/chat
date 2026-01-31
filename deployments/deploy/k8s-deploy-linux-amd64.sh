@@ -1,79 +1,132 @@
 #!/bin/bash
 
 # OpenIM Server Deployment Script for Linux AMD64
-# This script cross-compiles binaries for linux/amd64 on mac arm64, builds Docker images, pushes to private Harbor, and deploys to Kubernetes
+# 优化版：支持构建容错、错误汇总打印、批量处理
 
-set -e
+# 注意：这里去掉了 set -e，因为我们需要手动处理错误逻辑
+# set -e 
 
 # Source the deployment config
-source deploy.confg
+if [ -f "deploy.confg" ]; then
+  source deploy.confg
+else
+  echo "Error: deploy.confg not found!"
+  exit 1
+fi
 
 NAMESPACE=$NAMESPACE
 VERSION=v$(date +%y%m%d%H%M%S)
-echo $VERSION > .version
+FAILED_SERVICES=()
 
-# Build binaries for linux/amd64
-echo "Building binaries for linux/amd64..."
-GOOS=linux GOARCH=amd64 PLATFORMS=linux_amd64 CGO_ENABLED=0 mage build
+# Ask user whether to run mage build
+read -p "Do you want to run mage build? (y/n): " run_build
+if [[ "$run_build" =~ ^[Yy]$ ]]; then
+  echo "Running mage build..."
+  GOOS=linux CGO_ENABLE=0 PLATFORMS=linux_amd64 mage build
+else
+  echo "Skipping mage build..."
+fi
 
 # Login to private Harbor
 echo "Logging in to Harbor..."
 echo "$HARBOR_PASS" | docker login $HARBOR_URL -u $HARBOR_USER --password-stdin
 
-# Build Docker images for linux/amd64 and push to Harbor
-echo "Building and pushing Docker images for linux/amd64..."
-
-# Check if buildx builder exists, create if not
+# Check if buildx builder exists
 if ! docker buildx ls | grep -q openim-builder; then
   docker buildx create --use --name openim-builder
 else
   docker buildx use openim-builder
 fi
 
+# 服务列表
 services=("openim-admin-api" "openim-admin-rpc" "openim-chat-api" "openim-chat-rpc")
 
-for service in "${services[@]}"; do
-  IMAGE_TAG="${HARBOR_URL}/${HARBOR_PROJECT}/${service}:${VERSION}"
-  docker buildx build --platform linux/amd64 --load -t $IMAGE_TAG -f build/images/$service/Dockerfile .
-  docker push $IMAGE_TAG
-done
+# 1. 编译与推送阶段
+read -p "Do you want to run docker build? (y/n): " run_docker_build
+if [[ "$run_docker_build" =~ ^[Yy]$ ]]; then
+  echo "Building and pushing Docker images..."
 
-# Update deployment YAMLs to use Harbor images
-echo "Updating deployment YAMLs to use Harbor images..."
-echo "Current directory: $(pwd)"
-echo "Checking for deployment files..."
+  for service in "${services[@]}"; do
+    IMAGE_TAG="${HARBOR_URL}/${HARBOR_PROJECT}/${service}:${VERSION}"
+    echo "----------------------------------------------------------"
+    echo "Processing: $service"
+    
+    # 执行构建（设置超时或普通执行）
+    if docker buildx build --platform linux/amd64 --load -t $IMAGE_TAG -f build/images/$service/Dockerfile . ; then
+      echo "Build $service success, pushing..."
+      if docker push $IMAGE_TAG; then
+        echo -e "\033[32mSUCCESS: $service pushed.\033[0m"
+      else
+        echo -e "\033[31mERROR: Push failed for $service\033[0m"
+        FAILED_SERVICES+=("$service (Push Failed)")
+      fi
+    else
+      echo -e "\033[31mERROR: Build failed or timeout for $service\033[0m"
+      FAILED_SERVICES+=("$service (Build Failed)")
+    fi
+  done
+
+  # 汇总输出
+  echo "=========================================================="
+  if [ ${#FAILED_SERVICES[@]} -ne 0 ]; then
+    echo -e "\033[31mBUILD SUMMARY: THE FOLLOWING SERVICES FAILED:\033[0m"
+    for failed in "${FAILED_SERVICES[@]}"; do
+      echo -e "\033[31m- $failed\033[0m"
+    done
+    echo "=========================================================="
+    read -p "Some images failed. Continue to deploy others? (y/n): " continue_deploy
+    if [[ ! "$continue_deploy" =~ ^[Yy]$ ]]; then
+      exit 1
+    fi
+  else
+    echo -e "\033[32mBUILD SUMMARY: ALL IMAGES COMPLETED SUCCESSFULLY.\033[0m"
+    echo "=========================================================="
+  fi
+  
+  # 只有在有成功构建的情况下才更新版本号
+  echo $VERSION > .version
+else
+  if [ -f ".version" ]; then
+    VERSION=$(cat .version)
+    echo "Using existing version: $VERSION"
+  else
+    echo "No .version file found and build skipped. Exiting."
+    exit 1
+  fi
+fi
+
+# 2. 更新 YAML 阶段
+echo "Updating deployment YAMLs..."
 for service in "${services[@]}"; do
   DEPLOYMENT_FILE="deployments/deploy/${service}-deployment.yml"
   IMAGE_TAG="${HARBOR_URL}/${HARBOR_PROJECT}/${service}:${VERSION}"
-  sed -i.bak "s|image: .*/${service}:.*|image: ${IMAGE_TAG}|g" $DEPLOYMENT_FILE
+  if [ -f "$DEPLOYMENT_FILE" ]; then
+    # 注意：macOS 的 sed 和 linux 有区别，这里通用处理
+    sed -i.bak "s|image: .*/${service}:.*|image: ${IMAGE_TAG}|g" $DEPLOYMENT_FILE
+    echo "Updated $DEPLOYMENT_FILE"
+  fi
 done
 
-# Deploy to Kubernetes
-echo "Starting OpenIM Server Deployment in namespace: $NAMESPACE"
+# 3. 部署阶段
+echo "Starting K8s Deployment in namespace: $NAMESPACE"
 
 # Apply ConfigMap
-echo "Applying ConfigMap..."
 kubectl apply -f deployments/deploy/chat-config.yml -n $NAMESPACE
 
-# Apply services
-echo "Applying services..."
-kubectl apply -f deployments/deploy/openim-admin-api-service.yml -n $NAMESPACE
-kubectl apply -f deployments/deploy/openim-admin-rpc-service.yml -n $NAMESPACE
-kubectl apply -f deployments/deploy/openim-chat-api-service.yml -n $NAMESPACE
-kubectl apply -f deployments/deploy/openim-chat-rpc-service.yml -n $NAMESPACE
-
-# Apply Deployments
-echo "Applying Deployments..."
-kubectl apply -f deployments/deploy/openim-admin-api-deployment.yml -n $NAMESPACE
-kubectl apply -f deployments/deploy/openim-admin-rpc-deployment.yml -n $NAMESPACE
-kubectl apply -f deployments/deploy/openim-chat-api-deployment.yml -n $NAMESPACE
-kubectl apply -f deployments/deploy/openim-chat-rpc-deployment.yml -n $NAMESPACE
+# 批量 Apply Services 和 Deployments
+for service in "${services[@]}"; do
+  SVC_FILE="deployments/deploy/${service}-service.yml"
+  DEP_FILE="deployments/deploy/${service}-deployment.yml"
+  
+  [ -f "$SVC_FILE" ] && kubectl apply -f "$SVC_FILE" -n $NAMESPACE
+  [ -f "$DEP_FILE" ] && kubectl apply -f "$DEP_FILE" -n $NAMESPACE
+done
 
 # Apply Ingress
-echo "Applying Ingress..."
-kubectl apply -f deployments/deploy/ingress.yml -n $NAMESPACE
+[ -f "deployments/deploy/ingress.yml" ] && kubectl apply -f deployments/deploy/ingress.yml -n $NAMESPACE
 
-echo "OpenIM Server Deployment completed successfully!"
-echo "You can check the status with: kubectl get pods -n $NAMESPACE"
-echo "Access the Admin API at: http://your-ingress-host/openim-admin-api"
-echo "Access the Chat API at: http://your-ingress-host/openim-chat-api"
+echo "----------------------------------------------------------"
+echo "Deployment Finished!"
+echo "Check pods: kubectl get pods -n $NAMESPACE"
+
+say -v Meijia "congratulations"
