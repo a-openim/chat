@@ -14,7 +14,7 @@ echo $VERSION > .version
 
 # Build binaries for linux/amd64
 echo "Building binaries for linux/amd64..."
-GOOS=linux GOARCH=amd64 CGO_ENABLED=0 mage build
+GOOS=linux GOARCH=amd64 PLATFORMS=linux_amd64 CGO_ENABLED=0 mage build
 
 # Login to private Harbor
 echo "Logging in to Harbor..."
