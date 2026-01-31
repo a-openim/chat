@@ -1,3 +1,22 @@
+# Use Go 1.22 Alpine as the base image for building the application
+FROM golang:1.22-alpine AS builder
+
+# Define the base directory for the application as an environment variable
+ENV CHAT_DIR=/openim-chat
+
+# Set the working directory inside the container based on the environment variable
+WORKDIR $CHAT_DIR
+
+# Set the Go proxy to improve dependency resolution speed
+#ENV GOPROXY=https://goproxy.io,direct
+
+# Copy all files from the current directory into the container
+COPY . .
+
+RUN go mod tidy
+
+RUN go build -o _output/admin-rpc ./cmd/rpc/admin-rpc
+
 # Using Alpine Linux for the final image
 FROM alpine:latest
 
@@ -10,8 +29,8 @@ WORKDIR $CHAT_DIR
 
 
 # Copy the compiled binaries and mage from the builder image to the final image
-COPY ./_output/bin/platforms/linux/amd64/admin-rpc $CHAT_DIR/_output/admin-rpc
-COPY ./config $CHAT_DIR/config
+COPY --from=builder $CHAT_DIR/_output $CHAT_DIR/_output
+COPY --from=builder $CHAT_DIR/config $CHAT_DIR/config
 
 # Set the command to run when the container starts
 ENTRYPOINT ["sh", "-c", "_output/admin-rpc"]

@@ -50,9 +50,9 @@ func CheckRedis(ctx context.Context, config *config.Redis) error {
 	return redisutil.Check(ctx, config.Build())
 }
 
-func CheckOpenIM(ctx context.Context, apiURL, secret, adminUserID string, redisConf *config.Redis, interval int) error {
+func CheckOpenIM(ctx context.Context, apiURL, secret, adminUserID string) error {
 	imAPI := imapi.New(apiURL, secret, adminUserID)
-	_, err := imAPI.GetAdminTokenServer(mcontext.SetOperationID(ctx, "CheckOpenIM"+idutil.OperationIDGenerator()), adminUserID)
+	_, err := imAPI.GetAdminTokenCache(mcontext.SetOperationID(ctx, "CheckOpenIM"+idutil.OperationIDGenerator()), adminUserID)
 	return err
 }
 
@@ -123,7 +123,7 @@ func performChecks(ctx context.Context, mongoConfig *config.Mongo, redisConfig *
 			return CheckRedis(ctx, redisConfig)
 		},
 		"OpenIM": func(ctx context.Context) error {
-			return CheckOpenIM(ctx, shareConfig.OpenIM.ApiURL, shareConfig.OpenIM.Secret, shareConfig.OpenIM.AdminUserID, redisConfig, shareConfig.OpenIM.TokenRefreshInterval)
+			return CheckOpenIM(ctx, shareConfig.OpenIM.ApiURL, shareConfig.OpenIM.Secret, shareConfig.OpenIM.AdminUserID)
 		},
 	}
 

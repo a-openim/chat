@@ -16,11 +16,12 @@ package database
 
 import (
 	"context"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson/primitive"
+
 	"github.com/openimsdk/chat/pkg/common/db/cache"
-	"github.com/openimsdk/protocol/constant"
+	"github.com/openimsdk/chat/pkg/common/tokenverify"
 	"github.com/openimsdk/tools/db/mongoutil"
 	"github.com/openimsdk/tools/db/pagination"
 	"github.com/openimsdk/tools/db/tx"
@@ -86,7 +87,7 @@ type AdminDatabaseInterface interface {
 	PageVersion(ctx context.Context, platforms []string, page pagination.Pagination) (int64, []*admindb.Application, error)
 }
 
-func NewAdminDatabase(cli *mongoutil.Client, rdb redis.UniversalClient) (AdminDatabaseInterface, error) {
+func NewAdminDatabase(cli *mongoutil.Client, rdb redis.UniversalClient, token *tokenverify.Token) (AdminDatabaseInterface, error) {
 	a, err := admin.NewAdmin(cli.GetDB())
 	if err != nil {
 		return nil, err
@@ -139,7 +140,7 @@ func NewAdminDatabase(cli *mongoutil.Client, rdb redis.UniversalClient) (AdminDa
 		applet:             applet,
 		clientConfig:       clientConfig,
 		application:        application,
-		cache:              cache.NewTokenInterface(rdb),
+		cache:              cache.NewTokenInterface(rdb, token),
 	}, nil
 }
 
@@ -339,17 +340,7 @@ func (o *AdminDatabase) GetLimitUserLoginIP(ctx context.Context, userID string, 
 }
 
 func (o *AdminDatabase) CacheToken(ctx context.Context, userID string, token string, expire time.Duration) error {
-	isSet, err := o.cache.AddTokenFlagNXEx(ctx, userID, token, constant.NormalToken, expire)
-	if err != nil {
-		return err
-	}
-	if !isSet {
-		// already exists, update
-		if err = o.cache.AddTokenFlag(ctx, userID, token, constant.NormalToken); err != nil {
-			return err
-		}
-	}
-	return nil
+	return o.cache.SetTokenExpire(ctx, userID, token, expire)
 }
 
 func (o *AdminDatabase) GetTokens(ctx context.Context, userID string) (map[string]int32, error) {

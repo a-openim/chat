@@ -24,12 +24,11 @@ var (
 	customConfigDir = "config"  // configuration directory, default is "config"
 	customToolsDir  = "tools"   // tools source code directory, default is "tools"
 )
-//  GOOS=linux CGO_ENABLE=0 PLATFORMS=linux_amd64 mage build
+
 // Build support specifical binary build.
 //
 // Example: `mage build chat-api chat-rpc check-component`
 func Build() {
-
 	flag.Parse()
 	bin := flag.Args()
 	if len(bin) != 0 {

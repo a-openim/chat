@@ -5,16 +5,16 @@ import (
 	"sync"
 	"time"
 
-	"github.com/openimsdk/chat/pkg/botstruct"
+	"github.com/openimsdk/tools/log"
+
 	"github.com/openimsdk/chat/pkg/eerrs"
 	"github.com/openimsdk/protocol/auth"
 	"github.com/openimsdk/protocol/constant"
+	constantpb "github.com/openimsdk/protocol/constant"
 	"github.com/openimsdk/protocol/group"
 	"github.com/openimsdk/protocol/relation"
 	"github.com/openimsdk/protocol/sdkws"
 	"github.com/openimsdk/protocol/user"
-	"github.com/openimsdk/tools/errs"
-	"github.com/openimsdk/tools/log"
 )
 
 type CallerInterface interface {
@@ -22,27 +22,19 @@ type CallerInterface interface {
 	ImportFriend(ctx context.Context, ownerUserID string, friendUserID []string) error
 	GetUserToken(ctx context.Context, userID string, platform int32) (string, error)
 	GetAdminTokenCache(ctx context.Context, userID string) (string, error)
-	GetAdminTokenServer(ctx context.Context, userID string) (string, error)
 	InviteToGroup(ctx context.Context, userID string, groupIDs []string) error
-
 	UpdateUserInfo(ctx context.Context, userID string, nickName string, faceURL string) error
-	GetUserInfo(ctx context.Context, userID string) (*sdkws.UserInfo, error)
-	GetUsersInfo(ctx context.Context, userIDs []string) ([]*sdkws.UserInfo, error)
-	AddNotificationAccount(ctx context.Context, req *user.AddNotificationAccountReq) error
-	UpdateNotificationAccount(ctx context.Context, req *user.UpdateNotificationAccountInfoReq) error
-
 	ForceOffLine(ctx context.Context, userID string) error
 	RegisterUser(ctx context.Context, users []*sdkws.UserInfo) error
 	FindGroupInfo(ctx context.Context, groupIDs []string) ([]*sdkws.GroupInfo, error)
 	UserRegisterCount(ctx context.Context, start int64, end int64) (map[string]int64, int64, error)
 	FriendUserIDs(ctx context.Context, userID string) ([]string, error)
 	AccountCheckSingle(ctx context.Context, userID string) (bool, error)
-	SendSimpleMsg(ctx context.Context, req *SendSingleMsgReq, key string) error
 }
 
 type authToken struct {
 	token   string
-	expired time.Time
+	timeout time.Time
 }
 
 type Caller struct {
@@ -82,24 +74,25 @@ func (c *Caller) GetAdminTokenCache(ctx context.Context, userID string) (string,
 	c.lock.RLock()
 	t, ok := c.tokenCache[userID]
 	c.lock.RUnlock()
-	if ok && t.expired.After(time.Now()) {
-		return t.token, nil
+	if !ok || t.timeout.Before(time.Now()) {
+		c.lock.Lock()
+		defer c.lock.Unlock()
+		t, ok = c.tokenCache[userID]
+		if !ok || t.timeout.Before(time.Now()) {
+			token, err := c.getAdminTokenServer(ctx, userID)
+			if err != nil {
+				log.ZError(ctx, "get im admin token", err, "userID", userID)
+				return "", err
+			}
+			log.ZDebug(ctx, "get im admin token", "userID", userID)
+			t = &authToken{token: token, timeout: time.Now().Add(time.Minute * 5)}
+			c.tokenCache[userID] = t
+		}
 	}
-	c.lock.Lock()
-	defer c.lock.Unlock()
-	t, ok = c.tokenCache[userID]
-	if ok && t.expired.After(time.Now()) {
-		return t.token, nil
-	}
-	token, err := c.GetAdminTokenServer(ctx, userID)
-	if err != nil {
-		return "", err
-	}
-	c.tokenCache[userID] = &authToken{token: token, expired: time.Now().Add(time.Minute * 4)}
-	return token, nil
+	return t.token, nil
 }
 
-func (c *Caller) GetAdminTokenServer(ctx context.Context, userID string) (string, error) {
+func (c *Caller) getAdminTokenServer(ctx context.Context, userID string) (string, error) {
 	resp, err := getAdminToken.Call(ctx, c.imApi, &auth.GetAdminTokenReq{
 		Secret: c.imSecret,
 		UserID: userID,
@@ -107,7 +100,6 @@ func (c *Caller) GetAdminTokenServer(ctx context.Context, userID string) (string
 	if err != nil {
 		return "", err
 	}
-	log.ZDebug(ctx, "get im admin token from server", "userID", userID, "token", resp.Token)
 	return resp.Token, nil
 }
 
@@ -142,27 +134,6 @@ func (c *Caller) UpdateUserInfo(ctx context.Context, userID string, nickName str
 	return err
 }
 
-func (c *Caller) GetUserInfo(ctx context.Context, userID string) (*sdkws.UserInfo, error) {
-	resp, err := c.GetUsersInfo(ctx, []string{userID})
-	if err != nil {
-		return nil, err
-	}
-	if len(resp) == 0 {
-		return nil, errs.ErrRecordNotFound.WrapMsg("record not found")
-	}
-	return resp[0], nil
-}
-
-func (c *Caller) GetUsersInfo(ctx context.Context, userIDs []string) ([]*sdkws.UserInfo, error) {
-	resp, err := getUserInfo.Call(ctx, c.imApi, &user.GetDesignateUsersReq{
-		UserIDs: userIDs,
-	})
-	if err != nil {
-		return nil, err
-	}
-	return resp.UsersInfo, nil
-}
-
 func (c *Caller) RegisterUser(ctx context.Context, users []*sdkws.UserInfo) error {
 	_, err := registerUser.Call(ctx, c.imApi, &user.UserRegisterReq{
 		Users: users,
@@ -171,7 +142,7 @@ func (c *Caller) RegisterUser(ctx context.Context, users []*sdkws.UserInfo) erro
 }
 
 func (c *Caller) ForceOffLine(ctx context.Context, userID string) error {
-	for id := range constant.PlatformID2Name {
+	for id := range constantpb.PlatformID2Name {
 		_, _ = forceOffLine.Call(ctx, c.imApi, &auth.ForceLogoutReq{
 			PlatformID: int32(id),
 			UserID:     userID,
@@ -219,19 +190,4 @@ func (c *Caller) AccountCheckSingle(ctx context.Context, userID string) (bool, e
 		return false, eerrs.ErrAccountAlreadyRegister.Wrap()
 	}
 	return true, nil
-}
-
-func (c *Caller) SendSimpleMsg(ctx context.Context, req *SendSingleMsgReq, key string) error {
-	_, err := sendSimpleMsg.CallWithQuery(ctx, c.imApi, req, map[string]string{botstruct.Key: key})
-	return err
-}
-
-func (c *Caller) AddNotificationAccount(ctx context.Context, req *user.AddNotificationAccountReq) error {
-	_, err := addNotificationAccount.Call(ctx, c.imApi, req)
-	return err
-}
-
-func (c *Caller) UpdateNotificationAccount(ctx context.Context, req *user.UpdateNotificationAccountInfoReq) error {
-	_, err := updateNotificationAccount.Call(ctx, c.imApi, req)
-	return err
 }

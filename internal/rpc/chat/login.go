@@ -22,13 +22,6 @@ import (
 	"github.com/openimsdk/chat/pkg/protocol/chat"
 )
 
-type verifyType int
-
-const (
-	phone verifyType = iota
-	mail
-)
-
 func (o *chatSvr) verifyCodeJoin(areaCode, phoneNumber string) string {
 	return areaCode + " " + phoneNumber
 }
@@ -92,26 +85,6 @@ func (o *chatSvr) SendVerifyCode(ctx context.Context, req *chat.SendVerifyCodeRe
 	if o.SMS == nil && o.Mail == nil {
 		return &chat.SendVerifyCodeResp{}, nil // super code
 	}
-	if req.Email != "" {
-		switch o.conf.Mail.Use {
-		case constant.VerifySuperCode:
-			return &chat.SendVerifyCodeResp{}, nil // super code
-		case constant.VerifyMail:
-		default:
-			return nil, errs.ErrInternalServer.WrapMsg("email verification code is not enabled")
-		}
-	}
-
-	if req.AreaCode != "" {
-		switch o.conf.Phone.Use {
-		case constant.VerifySuperCode:
-			return &chat.SendVerifyCodeResp{}, nil // super code
-		case constant.VerifyALi:
-		default:
-			return nil, errs.ErrInternalServer.WrapMsg("phone verification code is not enabled")
-		}
-	}
-
 	isEmail := req.Email != ""
 	var (
 		code     = o.genVerifyCode()
@@ -119,11 +92,17 @@ func (o *chatSvr) SendVerifyCode(ctx context.Context, req *chat.SendVerifyCodeRe
 		sendCode func() error
 	)
 	if isEmail {
+		if o.Mail == nil {
+			return nil, errs.ErrInternalServer.WrapMsg("email verification code is not enabled")
+		}
 		sendCode = func() error {
 			return o.Mail.SendMail(ctx, req.Email, code)
 		}
 		account = req.Email
 	} else {
+		if o.SMS == nil {
+			return nil, errs.ErrInternalServer.WrapMsg("mobile phone verification code is not enabled")
+		}
 		sendCode = func() error {
 			return o.SMS.SendCode(ctx, req.AreaCode, req.PhoneNumber, code)
 		}
@@ -157,35 +136,16 @@ func (o *chatSvr) SendVerifyCode(ctx context.Context, req *chat.SendVerifyCodeRe
 	return &chat.SendVerifyCodeResp{}, nil
 }
 
-func (o *chatSvr) verifyCode(ctx context.Context, account string, verifyCode string, type_ verifyType) (string, error) {
+func (o *chatSvr) verifyCode(ctx context.Context, account string, verifyCode string) (string, error) {
 	if verifyCode == "" {
 		return "", errs.ErrArgs.WrapMsg("verify code is empty")
 	}
-	switch type_ {
-	case phone:
-		switch o.conf.Phone.Use {
-		case constant.VerifySuperCode:
-			if o.Code.SuperCode != verifyCode {
-				return "", eerrs.ErrVerifyCodeNotMatch.Wrap()
-			}
-			return "", nil
-		case constant.VerifyALi:
-		default:
-			return "", errs.ErrInternalServer.WrapMsg("phone verification code is not enabled", "use", o.conf.Phone.Use)
+	if o.SMS == nil && o.Mail == nil {
+		if o.Code.SuperCode != verifyCode {
+			return "", eerrs.ErrVerifyCodeNotMatch.Wrap()
 		}
-	case mail:
-		switch o.conf.Mail.Use {
-		case constant.VerifySuperCode:
-			if o.Code.SuperCode != verifyCode {
-				return "", eerrs.ErrVerifyCodeNotMatch.Wrap()
-			}
-			return "", nil
-		case constant.VerifyMail:
-		default:
-			return "", errs.ErrInternalServer.WrapMsg("email verification code is not enabled")
-		}
+		return "", nil
 	}
-
 	last, err := o.Database.TakeLastVerifyCode(ctx, account)
 	if err != nil {
 		if dbutil.IsDBNotFound(err) {
@@ -219,16 +179,12 @@ func (o *chatSvr) VerifyCode(ctx context.Context, req *chat.VerifyCodeReq) (*cha
 	var account string
 	if req.PhoneNumber != "" {
 		account = o.verifyCodeJoin(req.AreaCode, req.PhoneNumber)
-		if _, err := o.verifyCode(ctx, account, req.VerifyCode, phone); err != nil {
-			return nil, err
-		}
 	} else {
 		account = req.Email
-		if _, err := o.verifyCode(ctx, account, req.VerifyCode, mail); err != nil {
-			return nil, err
-		}
 	}
-
+	if _, err := o.verifyCode(ctx, account, req.VerifyCode); err != nil {
+		return nil, err
+	}
 	return &chat.VerifyCodeResp{}, nil
 }
 
@@ -291,11 +247,11 @@ func (o *chatSvr) RegisterUser(ctx context.Context, req *chat.RegisterUserReq) (
 			}
 		}
 		if req.User.Email == "" {
-			if _, err := o.verifyCode(ctx, o.verifyCodeJoin(req.User.AreaCode, req.User.PhoneNumber), req.VerifyCode, phone); err != nil {
+			if _, err := o.verifyCode(ctx, o.verifyCodeJoin(req.User.AreaCode, req.User.PhoneNumber), req.VerifyCode); err != nil {
 				return nil, err
 			}
 		} else {
-			if _, err := o.verifyCode(ctx, req.User.Email, req.VerifyCode, mail); err != nil {
+			if _, err := o.verifyCode(ctx, req.User.Email, req.VerifyCode); err != nil {
 				return nil, err
 			}
 		}
@@ -455,24 +411,16 @@ func (o *chatSvr) Login(ctx context.Context, req *chat.LoginReq) (*chat.LoginRes
 	}
 	var verifyCodeID *string
 	if req.Password == "" {
-		var (
-			id string
-		)
-
+		var account string
 		if req.Email == "" {
-			account := o.verifyCodeJoin(req.AreaCode, req.PhoneNumber)
-			id, err = o.verifyCode(ctx, account, req.VerifyCode, phone)
-			if err != nil {
-				return nil, err
-			}
+			account = o.verifyCodeJoin(req.AreaCode, req.PhoneNumber)
 		} else {
-			account := req.Email
-			id, err = o.verifyCode(ctx, account, req.VerifyCode, mail)
-			if err != nil {
-				return nil, err
-			}
+			account = req.Email
 		}
-
+		id, err := o.verifyCode(ctx, account, req.VerifyCode)
+		if err != nil {
+			return nil, err
+		}
 		if id != "" {
 			verifyCodeID = &id
 		}

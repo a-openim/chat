@@ -4,13 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
-	"time"
-
 	"github.com/openimsdk/tools/db/mongoutil"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"strconv"
+	"time"
 )
 
 const (
@@ -45,7 +44,7 @@ func SetVersion(coll *mongo.Collection, key string, version int) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 	option := options.Update().SetUpsert(true)
-	filter := bson.M{"key": key}
+	filter := bson.M{"key": key, "value": strconv.Itoa(version)}
 	update := bson.M{"$set": bson.M{"key": key, "value": strconv.Itoa(version)}}
 	return mongoutil.UpdateOne(ctx, coll, filter, update, false, option)
 }

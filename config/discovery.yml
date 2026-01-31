@@ -1,9 +1,9 @@
 enable: "etcd"
 etcd:
   rootDirectory: openim
-  address: [ 10.88.88.13:12379 ]
-  username: 'root'
-  password: 'root123456'
+  address: [ localhost:12379 ]
+  username: ''
+  password: ''
 
 kubernetes:
   namespace: default
@@ -11,4 +11,3 @@ kubernetes:
 rpcService:
   chat: chat-rpc-service
   admin: admin-rpc-service
-  bot: bot-rpc-service

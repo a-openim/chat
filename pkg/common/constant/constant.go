@@ -117,10 +117,3 @@ const (
 	CredentialPhone
 	CredentialEmail
 )
-
-// verifyCode use
-const (
-	VerifySuperCode = "supercode"
-	VerifyALi       = "ali"
-	VerifyMail      = "mail"
-)

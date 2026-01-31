@@ -16,7 +16,6 @@ package chat
 
 import (
 	"context"
-
 	"github.com/openimsdk/tools/errs"
 
 	"github.com/openimsdk/chat/pkg/common/constant"
@@ -36,9 +35,9 @@ func (o *chatSvr) ResetPassword(ctx context.Context, req *chat.ResetPasswordReq)
 	var verifyCodeID string
 	var err error
 	if req.Email == "" {
-		verifyCodeID, err = o.verifyCode(ctx, o.verifyCodeJoin(req.AreaCode, req.PhoneNumber), req.VerifyCode, phone)
+		verifyCodeID, err = o.verifyCode(ctx, o.verifyCodeJoin(req.AreaCode, req.PhoneNumber), req.VerifyCode)
 	} else {
-		verifyCodeID, err = o.verifyCode(ctx, req.Email, req.VerifyCode, mail)
+		verifyCodeID, err = o.verifyCode(ctx, req.Email, req.VerifyCode)
 	}
 
 	if err != nil {

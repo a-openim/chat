@@ -1,5 +1,19 @@
 # openim-chat
 
+## 📄 License Options for OpenIM Source Code
+
+You may use the OpenIM source code to create compiled versions not originally produced by OpenIM under one of the following two licensing options:
+
+### 1. GNU General Public License v3.0 (GPLv3) 🆓
+
++ This option is governed by the Free Software Foundation's [GPL v3.0](https://www.gnu.org/licenses/gpl-3.0.en.html).
++ Usage is subject to certain exceptions as outlined in this policy.
+
+### 2. Commercial License 💼
+
++ Obtain a commercial license by contacting OpenIM.
++ For more details and licensing inquiries, please email 📧 [contact@openim.io](mailto:contact@openim.io).
+
 ## 🧩 Feature Overview
 
 1. This repository implements a business system, which consists of two parts: User System and Backend Management System.
@@ -9,9 +23,9 @@
 
 ## :busts_in_silhouette: Community
 
-- 💬 [Follow our Twitter account](https://twitter.com/founder_im63606)
-- 🚀 [Join our Slack community](https://join.slack.com/t/openimsdk/shared_invite/zt-2ijy1ys1f-O0aEDCr7ExRZ7mwsHAVg9A)
-- :eyes: [Join our WeChat group](https://openim-1253691595.cos.ap-nanjing.myqcloud.com/WechatIMG20.jpeg)
++ 💬 [Follow our Twitter account](https://twitter.com/founder_im63606)
++ 🚀 [Join our Slack community](https://join.slack.com/t/openimsdk/shared_invite/zt-2hljfom5u-9ZuzP3NfEKW~BJKbpLm0Hw)
++ :eyes: [Join our WeChat group](https://openim-1253691595.cos.ap-nanjing.myqcloud.com/WechatIMG20.jpeg)
 
 ## 🛫 Quick Start
 
@@ -84,6 +98,4 @@ mage stop
 
 ## 🚨 License
 
-This software is licensed under the Apache License 2.0
-
-
+:scroll: chat is licensed under the [GPL-3.0 license](https://github.com/openimsdk/chat#GPL-3.0-1-ov-file). See the [LICENSE](https://github.com/openimsdk/chat/tree/main/LICENSE) for the full license text.

@@ -1,18 +1,10 @@
 #!/bin/bash
 
-if ! command -v go &> /dev/null; then
-    echo "Go is not installed. Please install Go first."
-    exit 1
-fi
-
-TARGET_DIR="$HOME/.local/bin"
-mkdir -p "$TARGET_DIR"
-
-# Check if TARGET_DIR is in PATH
-if [[ ":$PATH:" != *":$TARGET_DIR:"* ]]; then
-    echo "Adding $TARGET_DIR to PATH in ~/.zshrc"
-    echo "export PATH=\"$TARGET_DIR:\$PATH\"" >> ~/.zshrc
-    export PATH="$TARGET_DIR:$PATH"
+if [[ ":$PATH:" == *":$HOME/.local/bin:"* ]]; then
+    TARGET_DIR="$HOME/.local/bin"
+else
+    TARGET_DIR="/usr/local/bin"
+    echo "Using /usr/local/bin as the installation directory. Might require sudo permissions."
 fi
 
 if ! command -v mage &> /dev/null; then
@@ -28,6 +20,4 @@ fi
 
 echo "Mage installed successfully."
 
-go mod download -x
-
-say -v Meijia "congratulations"
+go mod download
