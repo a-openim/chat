@@ -14,26 +14,17 @@ spec:
     spec:
       containers:
         - name: openim-admin-api-container
-          image: 10.88.88.13:81/app/openim-admin-api:v260130224700
+          image: 10.88.88.13:81/app/openim-admin-api:v260131094041
           imagePullPolicy: Always
           env:
             - name: CONFIG_PATH
               value: "/config"
             - name: CHATENV_REDIS_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: redis-secret
-                  key: redis-password
+              value: "root123456"
             - name: IMENV_MONGODB_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: openim-mongo-secret
-                  key: mongo_openim_username
+              value: "root"
             - name: CHATENV_MONGODB_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: mongo-secret
-                  key: mongo_openim_password
+              value: "root123456"
 
           volumeMounts:
             - name: openim-chat-config

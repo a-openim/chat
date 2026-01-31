@@ -82,12 +82,6 @@ echo "Starting OpenIM Server Deployment in namespace: $NAMESPACE"
 echo "Applying ConfigMap..."
 kubectl apply -f deployments/deploy/chat-config.yml -n $NAMESPACE
 
-# Apply secrets first
-echo "Applying secrets..."
-kubectl apply -f deployments/deploy/mongo-secret.yml -n $NAMESPACE
-kubectl apply -f deployments/deploy/redis-secret.yml -n $NAMESPACE
-
-
 # Apply services
 echo "Applying service..."
 for service in "${services[@]}"; do
