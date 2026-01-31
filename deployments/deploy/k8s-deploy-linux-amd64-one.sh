@@ -16,8 +16,8 @@ NAMESPACE=$NAMESPACE
 VERSION=v$(date +%y%m%d%H%M%S)
 echo $VERSION > .version
 
-# Note: Binaries are built inside the Docker container, so no pre-build needed
-GOOS=linux CGO_ENABLE=0 PLATFORMS=linux_amd64 mage build
+# Build binaries for linux/amd64
+GOOS=linux GOARCH=amd64 CGO_ENABLED=0 mage build
 
 # Login to private Harbor
 echo "Logging in to Harbor..."
