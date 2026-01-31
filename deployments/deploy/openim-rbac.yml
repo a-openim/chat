@@ -1,0 +1,73 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: openim-service-account
+  namespace: openim
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: openim-pod-reader
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: openim-service-reader
+rules:
+- apiGroups: [""]
+  resources: ["services"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: openim-pod-reader-binding
+subjects:
+- kind: ServiceAccount
+  name: openim-service-account
+  namespace: openim
+roleRef:
+  kind: ClusterRole
+  name: openim-pod-reader
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: openim-service-reader-binding
+subjects:
+- kind: ServiceAccount
+  name: openim-service-account
+  namespace: openim
+roleRef:
+  kind: ClusterRole
+  name: openim-service-reader
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: openim-service-reader-default
+  namespace: default
+rules:
+- apiGroups: [""]
+  resources: ["services"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: openim-service-reader-default-binding
+  namespace: default
+subjects:
+- kind: ServiceAccount
+  name: openim-service-account
+  namespace: openim
+roleRef:
+  kind: Role
+  name: openim-service-reader-default
+  apiGroup: rbac.authorization.k8s.io
