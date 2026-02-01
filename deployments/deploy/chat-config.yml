@@ -36,21 +36,22 @@ data:
 
   mongodb.yml: |
     # URI for database connection, leave empty if using address and credential settings directly
-    uri: ''
+    uri: ""
     # List of MongoDB server addresses
     address: [ 10.88.88.13:27017 ]
     # Name of the database
     database: openim_v3
     # Username for database authentication
-    username: root
+    username: root  # openIM
     # Password for database authentication
-    password: root123456
+    password: root123456 # openIM123
     # Authentication source for database authentication, if use root user, set it to admin
     authSource: admin
     # Maximum number of connections in the connection pool
     maxPoolSize: 100
     # Maximum number of retry attempts for a failed database connection
     maxRetry: 10
+    mongoMode: standalone
 
   redis.yml: |
     # List of Redis server addresses

@@ -14,18 +14,22 @@ spec:
     spec:
       containers:
         - name: openim-chat-rpc-container
-          image: 10.88.88.13:81/app/openim-chat-rpc:v260202063214
+          image: 10.88.88.13:81/app/openim-chat-rpc:v260202071219
           imagePullPolicy: IfNotPresent
           env:
             - name: CONFIG_PATH
               value: "/config"
-            - name: CHATENV_REDIS_PASSWORD
+            - name: DEPLOYMENT_TYPE
+              value: "kubernetes"
+            - name: IMENV_REDIS_PASSWORD
               value: "root123456"
-            - name: IMENV_MONGODB_USERNAME
-              value: "root"
-            - name: CHATENV_MONGODB_PASSWORD
-              value: "root123456"
-
+            - name: IMENV_MONGODB_URI
+              value: "mongodb://root:root123456@10.88.88.13:27017/openim_v3?authSource=admin"
+            - name: MONGO_URI
+              value: "mongodb://root:root123456@10.88.88.13:27017/openim_v3?authSource=admin"
+            - name: MONGODB_URI
+              value: "mongodb://root:root123456@10.88.88.13:27017/openim_v3?authSource=admin"
+          
           volumeMounts:
             - name: openim-chat-config
               mountPath: "/config"
