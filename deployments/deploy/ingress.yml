@@ -34,7 +34,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    - host: api-chat-openim.36x9.com
+    - host: backend-openim.36x9.com
       http:
         paths:
           - backend:
@@ -42,5 +42,5 @@ spec:
                 name: chat-api-service
                 port:
                   number: 10008
-            path: /chat-api
+            path: /chat
             pathType: Prefix
