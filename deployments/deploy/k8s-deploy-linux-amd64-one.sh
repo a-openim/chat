@@ -130,3 +130,5 @@ echo "OpenIM Chat Deployment for $selected_service completed successfully!"
 echo "You can check the status with: kubectl get pods -n $NAMESPACE"
 echo "Access the Admin API at: http://your-ingress-host/openim-admin-api"
 echo "Access the Chat API at: http://your-ingress-host/openim-chat-api"
+
+say -v Meijia "congratulations"
