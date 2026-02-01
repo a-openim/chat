@@ -81,19 +81,19 @@ type Redis struct {
 	Username       string   `mapstructure:"username"`
 	Password       string   `mapstructure:"password"`
 	EnablePipeline bool     `mapstructure:"enablePipeline"`
-	ClusterMode    bool     `mapstructure:"clusterMode"`
+	RedisMode      string   `mapstructure:"redisMode"`
 	DB             int      `mapstructure:"db"`
 	MaxRetry       int      `mapstructure:"MaxRetry"`
 }
 
 func (r *Redis) Build() *redisutil.Config {
 	return &redisutil.Config{
-		ClusterMode: r.ClusterMode,
-		Address:     r.Address,
-		Username:    r.Username,
-		Password:    r.Password,
-		DB:          r.DB,
-		MaxRetry:    r.MaxRetry,
+		RedisMode: r.RedisMode,
+		Address:   r.Address,
+		Username:  r.Username,
+		Password:  r.Password,
+		DB:        r.DB,
+		MaxRetry:  r.MaxRetry,
 	}
 }
 

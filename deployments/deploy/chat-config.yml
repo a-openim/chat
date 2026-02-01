@@ -61,8 +61,8 @@ data:
     password: root123456
     # Enable or disable pipeline processing
     enablePipeline: false
-    # Enable or disable cluster mode
-    clusterMode: false
+    # Redis mode: "cluster", "sentinel", or "standalone"
+    redisMode: "standalone"
     # Database index to be used
     db: 0
     # Maximum number of retry attempts for a failed connection
