@@ -7,10 +7,10 @@
 # set -e 
 
 # Source the deployment config
-if [ -f "deploy.confg" ]; then
-  source deploy.confg
+if [ -f "deployments/deploy.confg" ]; then
+  source deployments/deploy.confg
 else
-  echo "Error: deploy.confg not found!"
+  echo "Error: deployments/deploy.confg not found!"
   exit 1
 fi
 

@@ -6,11 +6,11 @@
 set -e
 
 # Source the deployment config
-if [ ! -f deploy.confg ]; then
-  echo "Configuration file 'deploy.confg' not found. Exiting."
+if [ ! -f deployments/deploy.confg ]; then
+  echo "Configuration file 'deployments/deploy.confg' not found. Exiting."
   exit 1
 fi
-source deploy.confg
+source deployments/deploy.confg
 
 NAMESPACE=$NAMESPACE
 VERSION=v$(date +%y%m%d%H%M%S)
