@@ -6,7 +6,14 @@ metadata:
     kubernetes.io/ingress.class: "nginx"
     nginx.ingress.kubernetes.io/enable-cors: "true"
     nginx.ingress.kubernetes.io/cors-allow-origin: "*"
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization,operationid,token,operationID"
+    nginx.ingress.kubernetes.io/cors-expose-headers: "Content-Length,Content-Type"
+    nginx.ingress.kubernetes.io/cors-max-age: "1728000"
+    # --- WebSocket 支持配置 ---
+    nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
   name: admin-api-ingress
   namespace: openim
 spec:
@@ -20,8 +27,8 @@ spec:
                 name: admin-api-service
                 port:
                   number: 10009
-            path: /admin-api(/|$)(.*)
-            pathType: ImplementationSpecific
+            path: /
+            pathType: Prefix
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -30,13 +37,20 @@ metadata:
     kubernetes.io/ingress.class: "nginx"
     nginx.ingress.kubernetes.io/enable-cors: "true"
     nginx.ingress.kubernetes.io/cors-allow-origin: "*"
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization,operationid,token,operationID"
+    nginx.ingress.kubernetes.io/cors-expose-headers: "Content-Length,Content-Type"
+    nginx.ingress.kubernetes.io/cors-max-age: "1728000"
+    # --- WebSocket 支持配置 ---
+    nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
   name: chat-api-ingress
   namespace: openim
 spec:
   ingressClassName: nginx
   rules:
-    - host: backend-openim.36x9.com
+    - host: api-chat-openim.36x9.com
       http:
         paths:
           - backend:
@@ -44,5 +58,5 @@ spec:
                 name: chat-api-service
                 port:
                   number: 10008
-            path: /chat(/|$)(.*)
-            pathType: ImplementationSpecific
+            path: /
+            pathType: Prefix
