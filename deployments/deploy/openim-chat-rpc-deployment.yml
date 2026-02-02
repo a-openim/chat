@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: openim-chat-rpc-container
-          image: 10.88.88.13:81/app/openim-chat-rpc:v260202111133
+          image: 10.88.88.13:81/app/openim-chat-rpc:v260202134049
           imagePullPolicy: IfNotPresent
           env:
             - name: CONFIG_PATH
