@@ -120,3 +120,6 @@ kubectl get all
 ## Notes:
 
 - If you use a specific namespace for your deployment, be sure to append the -n <namespace> flag to your kubectl commands.
+
+
+kubectl logs $(kubectl get pods -n openim -l app=chat-rpc-server -o name | head -n 1) -n openim -f
