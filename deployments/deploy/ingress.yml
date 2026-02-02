@@ -6,6 +6,7 @@ metadata:
     kubernetes.io/ingress.class: "nginx"
     nginx.ingress.kubernetes.io/enable-cors: "true"
     nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
   name: admin-api-ingress
   namespace: openim
 spec:
@@ -19,8 +20,8 @@ spec:
                 name: admin-api-service
                 port:
                   number: 10009
-            path: /admin-api
-            pathType: Prefix
+            path: /admin-api(/|$)(.*)
+            pathType: ImplementationSpecific
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -29,6 +30,7 @@ metadata:
     kubernetes.io/ingress.class: "nginx"
     nginx.ingress.kubernetes.io/enable-cors: "true"
     nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
   name: chat-api-ingress
   namespace: openim
 spec:
@@ -42,5 +44,5 @@ spec:
                 name: chat-api-service
                 port:
                   number: 10008
-            path: /chat
-            pathType: Prefix
+            path: /chat(/|$)(.*)
+            pathType: ImplementationSpecific

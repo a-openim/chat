@@ -34,6 +34,7 @@ func (o *chatSvr) verifyCodeJoin(areaCode, phoneNumber string) string {
 }
 
 func (o *chatSvr) SendVerifyCode(ctx context.Context, req *chat.SendVerifyCodeReq) (*chat.SendVerifyCodeResp, error) {
+	log.ZInfo(ctx, "SendVerifyCode called", "usedFor", req.UsedFor, "email", req.Email, "areaCode", req.AreaCode, "phoneNumber", req.PhoneNumber, "phone.use", o.conf.Phone.Use, "mail.use", o.conf.Mail.Use)
 	switch int(req.UsedFor) {
 	case constant.VerificationCodeForRegister:
 		if err := o.Admin.CheckRegister(ctx, req.Ip); err != nil {
@@ -93,6 +94,7 @@ func (o *chatSvr) SendVerifyCode(ctx context.Context, req *chat.SendVerifyCodeRe
 		return &chat.SendVerifyCodeResp{}, nil // super code
 	}
 	if req.Email != "" {
+
 		switch o.conf.Mail.Use {
 		case constant.VerifySuperCode:
 			return &chat.SendVerifyCodeResp{}, nil // super code
@@ -158,6 +160,7 @@ func (o *chatSvr) SendVerifyCode(ctx context.Context, req *chat.SendVerifyCodeRe
 }
 
 func (o *chatSvr) verifyCode(ctx context.Context, account string, verifyCode string, type_ verifyType) (string, error) {
+	log.ZInfo(ctx, "verifyCode called", "account", account, "verifyCode", verifyCode, "type", type_, "phone.use", o.conf.Phone.Use, "mail.use", o.conf.Mail.Use)
 	if verifyCode == "" {
 		return "", errs.ErrArgs.WrapMsg("verify code is empty")
 	}

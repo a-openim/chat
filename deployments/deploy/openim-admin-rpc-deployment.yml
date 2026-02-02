@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: openim-admin-rpc-container
-          image: 10.88.88.13:81/app/openim-admin-rpc:v260202075751
+          image: 10.88.88.13:81/app/openim-admin-rpc:v260202085914
           imagePullPolicy: IfNotPresent
           env:
             - name: CONFIG_PATH

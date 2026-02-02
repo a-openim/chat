@@ -13,6 +13,7 @@ import (
 	"github.com/openimsdk/tools/db/mongoutil"
 	"github.com/openimsdk/tools/discovery"
 	"github.com/openimsdk/tools/errs"
+	"github.com/openimsdk/tools/log"
 	"github.com/openimsdk/tools/mw"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -44,6 +45,7 @@ func Start(ctx context.Context, config *Config, client discovery.SvcDiscoveryReg
 	config.RpcConfig.VerifyCode.Phone.Use = strings.ToLower(config.RpcConfig.VerifyCode.Phone.Use)
 	config.RpcConfig.VerifyCode.Mail.Use = strings.ToLower(config.RpcConfig.VerifyCode.Mail.Use)
 	srv.conf = config.RpcConfig.VerifyCode
+	log.ZInfo(ctx, "VerifyCode config loaded", "phone.use", config.RpcConfig.VerifyCode.Phone.Use, "mail.use", config.RpcConfig.VerifyCode.Mail.Use)
 	switch config.RpcConfig.VerifyCode.Phone.Use {
 	case "ali":
 		ali := config.RpcConfig.VerifyCode.Phone.Ali

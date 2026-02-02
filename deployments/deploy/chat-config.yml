@@ -126,7 +126,7 @@ data:
       superCode: "666666"
       len: 6
       phone:
-        use: ""
+        use: "superCode"
         ali:
           endpoint: ""
           accessKeyId: ""
@@ -134,7 +134,7 @@ data:
           signName: ""
           verificationCodeTemplateCode: ""
       mail:
-        enable: false
+        use: "superCode"
         title: ""
         senderMail: ""
         senderAuthorizationCode: ""
